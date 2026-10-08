@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Microbot Swarm: sealed, wireless, modular robotics</title>
 <meta name="description" content="Interactive exploded view of a 40 mm sealed microbot and its wireless charging hub.">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -64,7 +64,15 @@ input[type=range]{accent-color:var(--sig);width:150px}
 @keyframes g{25%{transform:translate(-3%,2%)}50%{transform:translate(2%,-3%)}75%{transform:translate(-2%,-2%)}}
 #intro{position:fixed;inset:0;background:var(--ink);z-index:20;transition:opacity 1.6s ease .3s;pointer-events:none}
 body.ready #intro{opacity:0}
-@media(max-width:900px){.lb{display:none}.w{grid-template-columns:1fr}#nav{display:none}.p.end{padding-bottom:18vh}section{align-items:flex-end;padding-bottom:16vh}#s4{padding-bottom:12vh}}
+@media(max-width:900px){.w{grid-template-columns:1fr}#nav{display:none}section{min-height:100svh;align-items:flex-end;padding:0 5vw 9vh}
+.p,.p.end{width:100%;padding:36px 18px 20px;border-radius:16px;background:linear-gradient(180deg,rgba(6,9,6,0),rgba(6,9,6,.85) 30%);align-self:flex-end}
+h1{font-size:clamp(30px,8.4vw,46px);margin-bottom:14px}h2{font-size:clamp(26px,7vw,36px);margin-bottom:12px}
+p{font-size:15px;line-height:1.5;max-width:none}.stats{gap:20px;margin-top:20px;padding-top:14px}.stats b{font-size:19px}
+#s4{align-items:flex-start;padding:13vh 5vw 10vh}.w{background:rgba(6,9,6,.86);padding:18px;border-radius:16px;gap:28px}
+table{font-size:13px}td:first-child{width:34%}li{font-size:13px}
+#hud{top:calc(3vh + 52px);bottom:auto;left:5vw;right:5vw;align-items:center}#cap{font-size:12px}#brand{left:5vw;font-size:15px}input[type=range]{width:110px}
+.lb{padding-left:24px;width:150px}.lb::before{width:16px}.lb b{font-size:11.5px}.lb span{display:none}
+.vig{background:radial-gradient(ellipse at 50% 35%,transparent 45%,rgba(0,0,0,.65))}}
 @media(prefers-reduced-motion:reduce){.gr{animation:none}}
 </style>
 </head>
@@ -224,15 +232,17 @@ const K=[[0,.5,14],[4.2,2.4,7.8],[-3.6,4.2,8.6],[0,3.2,15],[7,3.5,14]];
 const nav=$('#nav');K.forEach((_,i)=>{const b=document.createElement('button');b.setAttribute('aria-label','Go to section '+(i+1));b.onclick=()=>$('#s'+i).scrollIntoView({behavior:'smooth'});nav.appendChild(b)});
 let S=0,yaw=0,yawT=0,last=-1;
 const wt=(s,i)=>cl(1.6-2*Math.abs(s-i),0,1),v=new T.Vector3();
-function resize(){const w=innerWidth,h=innerHeight;R.setSize(w,h);cam.aspect=w/h;if(w>900)cam.setViewOffset(w,h,-w*.08,0,w,h);else cam.clearViewOffset();cam.updateProjectionMatrix()}
+function resize(){const w=innerWidth,h=innerHeight;R.setSize(w,h);cam.aspect=w/h;if(w>900)cam.setViewOffset(w,h,-w*.08,0,w,h);else cam.setViewOffset(w,h,0,h*.16,w,h);cam.updateProjectionMatrix()}
 addEventListener('resize',resize);resize();
 addEventListener('pointermove',e=>{if(e.buttons&1&&!e.target.closest('button,input'))yawT+=e.movementX*.008});
+let tx=0,ty=0;addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY},{passive:true});
+addEventListener('touchmove',e=>{const x=e.touches[0].clientX,y=e.touches[0].clientY,dx=x-tx,dy=y-ty;if(Math.abs(dx)>Math.abs(dy)&&!e.target.closest('input'))yawT+=dx*.01;tx=x;ty=y},{passive:true});
 function frame(ms){
- const t=ms*.001,raw=scrollY/innerHeight;S+=(Math.min(raw,4)-S)*.07;
+ const t=ms*.001,raw=scrollY/$('#s0').offsetHeight;S+=(Math.min(raw,4)-S)*.07;
  const i=Math.min(Math.floor(S),3),f=ss(S-i);
  const a=K[i],b=K[Math.min(i+1,4)];
  cam.position.set(a[0]+(b[0]-a[0])*f+Math.sin(t*.21)*.6,a[1]+(b[1]-a[1])*f+Math.cos(t*.17)*.3,a[2]+(b[2]-a[2])*f);
- cam.lookAt(0,0,0);
+ cam.position.multiplyScalar(Math.max(1,.9/cam.aspect));cam.lookAt(0,0,0);
  yaw+=(yawT-yaw)*.08;
  const ex=+$('#ex').value,wB=wt(S,1),wH=wt(S,2),wS=Math.max(wt(S,0),wt(S,3),wt(S,4));
  bot.visible=wB>.02;hub.visible=wH>.02;sw.visible=wS>.02;
